@@ -65,13 +65,17 @@ def filter_tickers_lastPrice(initial_price_tickers, volatility, trader):
 def buy_ticker( trader: shift.Trader, tickers):
     print('buy_tickers :'+ str(tickers))
     for ticker in tickers:
-       ticker_buy = shift.Order(shift.Order.Type.MARKET_BUY, ticker, 50)
+       ticker_buy = shift.Order(shift.Order.Type.MARKET_BUY, ticker, 20)
        trader.submit_order(ticker_buy)
        print('ticker bought:' + str(ticker))
+    if len(tickers)==0:
+        ticker_buy = shift.Order(shift.Order.Type.MARKET_BUY, 'VIXY', 40)
+        trader.submit_order(ticker_buy)
 
-def sell_ticker( trader: shift.Trader, tickers):
-   for ticker in tickers:
-       ticker_buy = shift.Order(shift.Order.Type.MARKET_BUY, ticker, 50)
+
+def sell_ticker( trader: shift.Trader, ticker):
+    for ticker in tickers:
+       ticker_buy = shift.Order(shift.Order.Type.MARKET_BUY, ticker, 20)
        trader.submit_order(ticker_buy)
 
 def init_tickers():
@@ -83,13 +87,36 @@ def init_tickers():
     print(tickers)
     return tickers
 
+def demo_09(trader: shift.Trader):
+    """
+    This method prints all submitted orders information.
+    :param trader:
+    :return:
+    """
 
-    #     best_bid = trader.get_best_price(stock_ticker).get_bid_price()
-    #     print(best_bid)
-    #     print('best bid  value '+s+'## ' + str(best_bid))
-    #     best_ask = trader.get_best_price(stock_ticker).get_ask_price()
-    #     print('best bid  value ' + s + '## ' + str(best_bid))
-    #     print('best ask  value ##' + str(best_ask))
+    print(
+        "Symbol\t\t\t\tType\t  Price\t\tSize\tExecuted\tID\t\t\t\t\t\t\t\t\t\t\t\t\t\t Status\t\tTimestamp"
+    )
+    for order in trader.get_submitted_orders():
+        if order.status == shift.Order.Status.FILLED:
+            price = order.executed_price
+        else:
+            price = order.price
+        print(
+            "%6s\t%16s\t%7.2f\t\t%4d\t\t%4d\t%36s\t%23s\t\t%26s"
+            % (
+                order.symbol,
+                order.type,
+                price,
+                order.size,
+                order.executed_size,
+                order.id,
+                order.status,
+                order.timestamp,
+            )
+        )
+
+    return
 
 # connect
 try:
@@ -108,6 +135,7 @@ try:
     thres_tickers = trading_symbols(vol_tickers)
     thrs_grter_ticker = filter_tickers_lastPrice(intial_price,thres_tickers,trader)
     buy_ticker(trader,thrs_grter_ticker)
+    demo_09(trader)
 
 except shift.IncorrectPasswordError as e:
     print(e)
