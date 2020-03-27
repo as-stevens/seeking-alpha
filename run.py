@@ -43,25 +43,31 @@ def get_volatility(trader):
     return vol
 
 def trading_symbols(vol):
+    print('trading_symbols  :' + str(vol))
     vol_tickers= []
-    for v_ticker in vol.values():
-        if v_ticker > 0.00015:
-            vol_tickers.append(v_ticker)
+    for key, value in vol.items():
+        if value > 0.00015:
+            vol_tickers.append(key)
+    print('Greater than  :' + str(vol_tickers))
     return vol_tickers
 
 def filter_tickers_lastPrice(initial_price_tickers, volatility, trader):
+    print('filter_tickers_lastPrice :' + str(initial_price_tickers))
     fil_tickers= []
     for v_ticker in volatility:
         last_price = trader.get_last_price(v_ticker)
         if last_price > initial_price_tickers.get(v_ticker):
             fil_tickers.append(v_ticker)
+    print('filtered ticker last price greater than initial price:' + str(fil_tickers))
     return fil_tickers
 
 
 def buy_ticker( trader: shift.Trader, tickers):
-   for ticker in tickers:
+    print('buy_tickers :'+ str(tickers))
+    for ticker in tickers:
        ticker_buy = shift.Order(shift.Order.Type.MARKET_BUY, ticker, 50)
        trader.submit_order(ticker_buy)
+       print('ticker bought:' + str(ticker))
 
 def sell_ticker( trader: shift.Trader, tickers):
    for ticker in tickers:
