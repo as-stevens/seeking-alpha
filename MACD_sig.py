@@ -21,11 +21,11 @@ def EMA(self,n,ticker):
     # 2) buy and sell signal lines
     # signals - classify -> buy or sell
     # trade -> trade the ticker
-    #3) tader -> current_price
-    #4) ema : fast(3 seconds) and slow (10 seconds)
-    #5) macd -> fast_ema -slow ema -> continous data-
-    # 6) signal data : e_macd -> ema of macd for window of (9 seconds) -> continious data
-    # 7) 19th second first signal data : macd - first signal at 19 second
+    #   3) tader -> current_price
+    #   4) ema : fast(3 seconds) and slow (10 seconds)
+    #   5) macd -> fast_ema -slow ema -> continous data-
+    #   6) signal data : e_macd -> ema of macd for window of (9 seconds) -> continious data
+    #   7) 19th second first signal data : macd - first signal at 19 second
     # and it will continue for rest of the day
     # previous values before signal -> macd < signal data -> buy
     # else sell
