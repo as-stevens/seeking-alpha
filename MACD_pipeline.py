@@ -64,7 +64,7 @@ class MACD_pipeline(TransformerMixin):
         self.macd(ticker,signal_period)
 
 
-mscd = MACD_pipeline(tickers=['AAPL','AMN'])
-mscd.schedule_macd()
+#mscd = MACD_pipeline(tickers=['AAPL','AMN'])
+#mscd.schedule_macd()
 
 

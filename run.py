@@ -7,6 +7,7 @@ from typing import List
 import pandas as pd
 import numpy
 import shift
+import MACD_pipeline
 
 # import goodcbfs
 from credentials import my_password, my_username
@@ -125,6 +126,11 @@ try:
     # connection & subs to order_book
     trader.connect("initiator.cfg", my_password)
     trader.sub_all_order_book()
+    
+    # Run the macd code
+    mscd = MACD_pipeline(tickers=['AAPL', 'AMN'])
+    mscd.schedule_macd()
+    
     tickers = init_tickers()
     time.sleep(5)
     # print(trader.get_last_price('AAPL'))
