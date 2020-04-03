@@ -7,7 +7,7 @@ from typing import List
 import pandas as pd
 import numpy
 import shift
-import MACD_pipeline
+# import MACD_pipeline
 
 # import goodcbfs
 from credentials import my_password, my_username
@@ -52,7 +52,7 @@ def trading_symbols(vol):
     print('Greater than  :' + str(vol_tickers))
     return vol_tickers
 
-def filter_tickers_lastPrice(initial_price_tickers, volatility, trader):
+def filter_tickers_buy_lastPrice(initial_price_tickers, volatility, trader):
     print('filter_tickers_lastPrice :' + str(initial_price_tickers))
     fil_tickers= []
     for v_ticker in volatility:
@@ -62,11 +62,21 @@ def filter_tickers_lastPrice(initial_price_tickers, volatility, trader):
     print('filtered ticker last price greater than initial price:' + str(fil_tickers))
     return fil_tickers
 
+def filter_tickers_sell_lastPrice(initial_price_tickers, volatility, trader):
+    print('filter_tickers_lastPrice :' + str(initial_price_tickers))
+    fil_tickers= []
+    for v_ticker in volatility:
+        last_price = trader.get_last_price(v_ticker)
+        if last_price < initial_price_tickers.get(v_ticker):
+            fil_tickers.append(v_ticker)
+    print('filtered ticker last price less than initial price:' + str(fil_tickers))
+    return fil_tickers
+
 
 def buy_ticker( trader: shift.Trader, tickers):
     print('buy_tickers :'+ str(tickers))
     for ticker in tickers:
-       ticker_buy = shift.Order(shift.Order.Type.MARKET_BUY, ticker, 20)
+       ticker_buy = shift.Order(shift.Order.Type.MARKET_BUY, ticker, 10)
        trader.submit_order(ticker_buy)
        print('ticker bought:' + str(ticker))
     if len(tickers)==0:
@@ -74,10 +84,12 @@ def buy_ticker( trader: shift.Trader, tickers):
         trader.submit_order(ticker_buy)
 
 
-def sell_ticker( trader: shift.Trader, ticker):
+def sell_ticker( trader: shift.Trader, tickers):
+    print('sell_tickers :' + str(tickers))
     for ticker in tickers:
-       ticker_buy = shift.Order(shift.Order.Type.MARKET_BUY, ticker, 20)
-       trader.submit_order(ticker_buy)
+       ticker_sell = shift.Order(shift.Order.Type.MARKET_SELL, ticker, 10)
+       trader.submit_order(ticker_sell)
+       print('ticker sold:' + str(ticker))
 
 def init_tickers():
     # get the ticker's list
@@ -120,38 +132,46 @@ def demo_09(trader: shift.Trader):
     return
 
 # connect
-try:
-    # create trader object
-    trader = shift.Trader(my_username)
-    # connection & subs to order_book
-    trader.connect("initiator.cfg", my_password)
-    trader.sub_all_order_book()
-    time.sleep(5)
-    # Run the macd code
-    mscd = MACD_pipeline(['SPY', 'VIXY', 'DIA', 'AAPL'])
-    mscd.schedule_macd()
-    mscd.trader_disconnect()
-    
-    #tickers = init_tickers()
-    #time.sleep(5)
-    # print(trader.get_last_price('AAPL'))
-    # get the initial price for all tickers
-    #intial_price = get_initialprice(trader, tickers)
-    # get the volatility for 1st 15 mins of trading window
-    #vol_tickers = get_volatility(trader)
-    #thres_tickers = trading_symbols(vol_tickers)
-    #thrs_grter_ticker = filter_tickers_lastPrice(intial_price,thres_tickers,trader)
-    #buy_ticker(trader,thrs_grter_ticker)
-    demo_09(trader)
 
-except shift.IncorrectPasswordError as e:
-    print(e)
-    #sys.exit(2)
-except shift.ConnectionTimeoutError as e:
-    print(e)
-    #sys.exit(2)
-finally:
-    trader.disconnect()
-    print('Trader connection disconnected')
+if __name__=="__main__":
+
+    try:
+        # create trader object
+        trader = shift.Trader(my_username)
+        # connection & subs to order_book
+        trader.connect("initiator.cfg", my_password)
+        trader.sub_all_order_book()
+        time.sleep(5)
+        # Run the macd code
+        # mscd = MACD_pipeline(['SPY', 'VIXY', 'DIA', 'AAPL'])
+        # mscd.schedule_macd()
+        # mscd.trader_disconnect()
+
+        tickers = init_tickers()
+        time.sleep(5)
+        while(True):
+            # get the initial price for all tickers
+            intial_price = get_initialprice(trader, tickers)
+            # get the volatility for 1st 15 mins of trading window
+            vol_tickers = get_volatility(trader)
+            thres_tickers = trading_symbols(vol_tickers)
+            thrs_grter_ticker = filter_tickers_buy_lastPrice(intial_price, thres_tickers, trader)
+            buy_ticker(trader, thrs_grter_ticker)
+            thrs_less_ticker = filter_tickers_sell_lastPrice(intial_price, thres_tickers, trader)
+            sell_ticker(trader,thrs_less_ticker)
+            time.sleep(900)
+            sell_ticker(trader,thrs_grter_ticker)
+            buy_ticker(trader,thrs_less_ticker)
+            demo_09(trader)
 
 
+
+    except shift.IncorrectPasswordError as e:
+        print(e)
+        # sys.exit(2)
+    except shift.ConnectionTimeoutError as e:
+        print(e)
+        # sys.exit(2)
+    finally:
+        trader.disconnect()
+        print('Trader connection disconnected')
