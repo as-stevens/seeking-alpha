@@ -126,21 +126,22 @@ try:
     # connection & subs to order_book
     trader.connect("initiator.cfg", my_password)
     trader.sub_all_order_book()
-    
-    # Run the macd code
-    mscd = MACD_pipeline(tickers=['AAPL', 'AMN'])
-    mscd.schedule_macd()
-    
-    tickers = init_tickers()
     time.sleep(5)
+    # Run the macd code
+    mscd = MACD_pipeline(['SPY', 'VIXY', 'DIA', 'AAPL'])
+    mscd.schedule_macd()
+    mscd.trader_disconnect()
+    
+    #tickers = init_tickers()
+    #time.sleep(5)
     # print(trader.get_last_price('AAPL'))
     # get the initial price for all tickers
-    intial_price = get_initialprice(trader, tickers)
+    #intial_price = get_initialprice(trader, tickers)
     # get the volatility for 1st 15 mins of trading window
-    vol_tickers = get_volatility(trader)
-    thres_tickers = trading_symbols(vol_tickers)
-    thrs_grter_ticker = filter_tickers_lastPrice(intial_price,thres_tickers,trader)
-    buy_ticker(trader,thrs_grter_ticker)
+    #vol_tickers = get_volatility(trader)
+    #thres_tickers = trading_symbols(vol_tickers)
+    #thrs_grter_ticker = filter_tickers_lastPrice(intial_price,thres_tickers,trader)
+    #buy_ticker(trader,thrs_grter_ticker)
     demo_09(trader)
 
 except shift.IncorrectPasswordError as e:
