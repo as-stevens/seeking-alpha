@@ -19,21 +19,21 @@ def get_initialprice(trader, tickers):
     initial_price = {}
     for j, k in enumerate(tickers):
         initial_price[k] = trader.get_last_price(k)
-    print('initial_price' + str(initial_price))
+    lg.debug(initial_price)
     return initial_price
 
 def get_volatility(trader):
     # get last trading price for all tickers at an interval of 1 min for 1st 15 mins
     trader.request_sample_prices(tickers, sampling_frequency=1, sampling_window=300)
-    print('Initiate call to trader.request_sample_prices')
+    lg.debug('Initiate call to trader.request_sample_prices')
     time.sleep(301)
-    print('returned  from trader.request_sample_prices')
+    lg.debug('returned  from trader.request_sample_prices')
     vol = {}
     for i, s in enumerate(tickers):
         stock_ticker = s
         #log_returns = trader.get_last_price(stock_ticker)
         log_returns = trader.get_log_returns(stock_ticker)
-        print('Log return : '+str(log_returns))
+        lg.debug('Log return : '+str(log_returns))
         if log_returns:
             log_returns_sq = [j**2 for j in log_returns]
             #log_returns_sq = [log_returns ** 2]
@@ -42,52 +42,52 @@ def get_volatility(trader):
             for ele in range(0,len(log_returns_sq)):
                 total = total + log_returns_sq[ele]
             vol[s] = (((1 / log_returns_size) * total)**0.5)
-    print('returned  get_volatility :'+ str(vol))
+    lg.debug('returned  get_volatility :'+ str(vol))
     return vol
 
 def trading_symbols(vol):
-    print('trading_symbols  :' + str(vol))
+    lg.debug('trading_symbols  :' + str(vol))
     vol_tickers= []
     for key, value in vol.items():
         if value > 0.00015:
             vol_tickers.append(key)
-    print('Greater than  :' + str(vol_tickers))
+    lg.debug('Greater than  :' + str(vol_tickers))
     return vol_tickers
 
 def filter_tickers_buy_lastPrice(initial_price_tickers, volatility, trader):
-    print('filter_tickers_lastPrice :' + str(initial_price_tickers))
+    lg.debug('filter_tickers_lastPrice :' + str(initial_price_tickers))
     fil_tickers= []
     for v_ticker in volatility:
         last_price = trader.get_last_price(v_ticker)
         if last_price > initial_price_tickers.get(v_ticker):
             fil_tickers.append(v_ticker)
-    print('filtered ticker last price greater than initial price:' + str(fil_tickers))
+    lg.debug('filtered ticker last price greater than initial price:' + str(fil_tickers))
     return fil_tickers
 
 def filter_tickers_sell_lastPrice(initial_price_tickers, volatility, trader):
-    print('filter_tickers_lastPrice :' + str(initial_price_tickers))
+    lg.debug('filter_tickers_lastPrice :' + str(initial_price_tickers))
     fil_tickers= []
     for v_ticker in volatility:
         last_price = trader.get_last_price(v_ticker)
         if last_price < initial_price_tickers.get(v_ticker):
             fil_tickers.append(v_ticker)
-    print('filtered ticker last price less than initial price:' + str(fil_tickers))
+    lg.debug('filtered ticker last price less than initial price:' + str(fil_tickers))
     return fil_tickers
 
 
 def buy_ticker( trader: shift.Trader, tickers):
-    print('buy_tickers :'+ str(tickers))
+    lg.debug('buy_tickers :'+ str(tickers))
     for ticker in tickers:
        ticker_buy = shift.Order(shift.Order.Type.MARKET_BUY, ticker, 10)
        trader.submit_order(ticker_buy)
-       print('ticker bought:' + str(ticker))
+       lg.debug('ticker bought:' + str(ticker))
     if len(tickers)==0:
         ticker_buy = shift.Order(shift.Order.Type.MARKET_BUY, 'VIXY', 40)
         trader.submit_order(ticker_buy)
 
 
 def sell_ticker( trader: shift.Trader, tickers):
-    print('sell_tickers :' + str(tickers))
+    lg.debug('sell_tickers :' + str(tickers))
     for ticker in tickers:
        ticker_sell = shift.Order(shift.Order.Type.MARKET_SELL, ticker, 10)
        trader.submit_order(ticker_sell)
@@ -99,7 +99,7 @@ def init_tickers():
     tickers.remove('DIA')
     tickers.remove('SPY')
     tickers.remove('VIXY')
-    print(tickers)
+    lg.debug(tickers)
     return tickers
 
 def demo_09(trader: shift.Trader):
@@ -169,11 +169,11 @@ if __name__=="__main__":
 
 
     except shift.IncorrectPasswordError as e:
-        print(e)
+        lg.debug(e)
         # sys.exit(2)
     except shift.ConnectionTimeoutError as e:
-        print(e)
+        lg.debug(e)
         # sys.exit(2)
     finally:
         trader.disconnect()
-        print('Trader connection disconnected')
+        lg.debug('Trader connection disconnected')
