@@ -10,6 +10,7 @@ import pandas as pd
 import numpy
 import shift
 from TraderS import TraderS
+import logging as lg
 
 
 from MACD_config import fast, slow, signal_period
@@ -21,7 +22,7 @@ class MACD_pipeline:
         self.df_columns = [ 'TICKER', 'LAG', 'CURRENT_PRICE','EMA_SLOW', 'EMA_FAST', 'MACD','SIGNAL_LINE','TRADE_SIGNAL','TRADE_DECISION']
         self.df = pd.DataFrame(columns=self.df_columns)
         self.df.TICKER = tickers
-        print(self.df)
+        lg.debug(self.df)
 
     def get_current_price(self):
         current_prices = {}
@@ -30,7 +31,7 @@ class MACD_pipeline:
             current_price = trader.get_last_price(ticker)
             current_prices[ticker] = current_price
             self.update_ticker(ticker, current_price)
-
+        lg.debug(current_prices)
         return current_prices
 
     def ema(self,ticker ,period, current_price, ema_type):

@@ -170,10 +170,12 @@ if __name__=="__main__":
 
     except shift.IncorrectPasswordError as e:
         lg.debug(e)
-        # sys.exit(2)
+        sys.exit(2)
     except shift.ConnectionTimeoutError as e:
         lg.debug(e)
-        # sys.exit(2)
+        sys.exit(2)
+    except Exception as err:
+        lg.error("Fatal error in main loop", exc_info = True)
     finally:
         trader.disconnect()
         lg.debug('Trader connection disconnected')
