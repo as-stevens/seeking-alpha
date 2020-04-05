@@ -8,6 +8,8 @@ import pandas as pd
 import numpy
 import shift
 # import MACD_pipeline
+import logger
+import logging as lg
 
 # import goodcbfs
 from credentials import my_password, my_username
@@ -134,7 +136,7 @@ def demo_09(trader: shift.Trader):
 # connect
 
 if __name__=="__main__":
-
+    lg.debug("App Started")
     try:
         # create trader object
         trader = shift.Trader(my_username)
