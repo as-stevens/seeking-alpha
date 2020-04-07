@@ -1,13 +1,7 @@
-import getopt
 import math
-import sys
 import time
-import MACD_config
-from typing import List
-import random
 
 import pandas as pd
-import numpy
 import shift
 from TraderS import TraderS
 import logging as lg
@@ -91,10 +85,11 @@ class MACD_pipeline:
 
     def schedule_macd(self):
         pd.set_option('display.expand_frame_repr', False)
-        time.sleep(5)
         while(True):
-            self.get_current_price()
+            #self.get_current_price()
             time.sleep(1)
+            lg.debug('Macd running')
+
     def trader_disconnect(self):
         TraderS.disconnect()
 
@@ -115,6 +110,6 @@ class MACD_pipeline:
 
 
 # Run the macd code
-mscd = MACD_pipeline(['SPY', 'VIXY', 'DIA', 'AAPL'])
-mscd.schedule_macd()
+#mscd = MACD_pipeline(['SPY', 'VIXY', 'DIA', 'AAPL'])
+#mscd.schedule_macd()
 
