@@ -37,7 +37,7 @@ class MACD_pipeline:
         if not pre_ema.dropna().empty:
             previous_ema = pre_ema.values[0]
             current_ema = beta*current_price + (1-beta)*previous_ema
-            print('current value {0} pre_ema {1}'.format(current_price,previous_ema))
+            lg.debug('current value {0} pre_ema {1}'.format(current_price,previous_ema))
         else:
             first_ema = True
             current_ema = current_price
@@ -71,16 +71,16 @@ class MACD_pipeline:
             ticker_buy = shift.Order(shift.Order.Type.MARKET_BUY, ticker, 20)
             TraderS.getInstance.submit_order(ticker_buy)
             self.df.loc[(self.df['TICKER'] == ticker) & (self.df['LAG'] == 0), 'TRADE_DECISION'] = 1
-            print('Buy the stock {0}'.format(ticker))
+            lg.debug('Buy the stock {0}'.format(ticker))
         elif current_trade_signal < previous_trade_signal:
             # Sell the stocks
             ticker_sell = shift.Order(shift.Order.Type.MARKET_SELL, ticker, 20)
             TraderS.getInstance.submit_order(ticker_sell)
             self.df.loc[(self.df['TICKER'] == ticker) & (self.df['LAG'] == 0), 'TRADE_DECISION'] = -1
-            print('Sell the stock {0}'.format(ticker))
+            lg.debug('Sell the stock {0}'.format(ticker))
         else:
-            print('No Buy Sell')
-        print(self.df)
+            lg.debug('No Buy Sell')
+        lg.debug(self.df)
 
 
     def schedule_macd(self):
@@ -103,7 +103,7 @@ class MACD_pipeline:
         previous_macd = self.df.loc[(self.df['TICKER'] == ticker) & (self.df['LAG'] == 0), 'MACD'].values[0]
         self.df.loc[(self.df['TICKER'] == ticker) & (self.df['LAG'] == 0), 'MACD'] = macd
         x = previous_macd and not math.isnan(previous_macd)
-        print('previous macd {}'.format(x))
+        lg.debug('previous macd {}'.format(x))
         if x:
             self.df.loc[(self.df['TICKER'] == ticker) & (self.df['LAG'] == 1), 'MACD'] = previous_macd
             current_trade_signal = self.signal_line(ticker,signal_period,macd,'SIGNAL_LINE')
