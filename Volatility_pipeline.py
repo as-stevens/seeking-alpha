@@ -15,7 +15,7 @@ from TraderS import TraderS
 # import goodcbfs
 from credentials import my_password, my_username
 class Volatility_Pipeline:
-    def get_initialprice(self,trader):
+    def get_initialprice(self,trader,tickers):
         # Getting the initial price recorded at 1st sec of trading
         initial_price = {}
         for j, k in enumerate(tickers):
@@ -96,7 +96,7 @@ class Volatility_Pipeline:
            trader.submit_order(ticker_sell)
            lg.debug('ticker sold:' + str(ticker))
 
-    def init_tickers(self):
+    def init_tickers(self,trader):
         # get the ticker's list
         tickers = trader.get_stock_list()
         tickers.remove('DIA')
@@ -145,10 +145,10 @@ class Volatility_Pipeline:
         while (True):
             # get the initial price for all tickers
             trader = TraderS.getInstance()
-            tickers = self.init_tickers()
+            tickers = self.init_tickers(trader)
             intial_price = self.get_initialprice(trader, tickers)
             # get the volatility for 1st 15 mins of trading window
-            vol_tickers = self.get_volatility(trader)
+            vol_tickers = self.get_volatility(trader,tickers)
             threshold_tickers = self.filterticker_on_threshold(vol_tickers)
             buyticker, sellticker = self.filter_tickers_lastPrice(intial_price, threshold_tickers, trader)
             buyticker, order_size = self.add_VIXY(buyticker, sellticker)

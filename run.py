@@ -13,7 +13,7 @@ if __name__=="__main__":
     lg.debug("App Started")
     try:
         # create trader object
-        #TraderS.getInstance().sub_all_order_book()
+        TraderS.getInstance().sub_all_order_book()
         time.sleep(5)
         # Run the macd code
         # mscd = MACD_pipeline(['SPY', 'VIXY', 'DIA', 'AAPL'])
@@ -25,6 +25,8 @@ if __name__=="__main__":
         t2 = threading.Thread(target=mscd_pipe.schedule_macd)
         t1.start()
         t2.start()
+        t1.join()
+        t2.join()
     except shift.IncorrectPasswordError as e:
         lg.debug(e)
         sys.exit(2)
