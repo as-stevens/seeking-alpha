@@ -86,9 +86,8 @@ class MACD_pipeline:
     def schedule_macd(self):
         pd.set_option('display.expand_frame_repr', False)
         while(True):
-            #self.get_current_price()
+            self.get_current_price()
             time.sleep(1)
-            lg.debug('Macd running')
 
     def trader_disconnect(self):
         TraderS.disconnect()
