@@ -45,53 +45,55 @@ def get_volatility(trader):
     lg.debug('returned  get_volatility :'+ str(vol))
     return vol
 
-def trading_symbols(vol):
+def filterticker_on_threshold(vol):
     lg.debug('trading_symbols  :' + str(vol))
     vol_tickers= []
     for key, value in vol.items():
-        if value > 0.00015:
+        if value > 0.00012:
             vol_tickers.append(key)
     lg.debug('Greater than  :' + str(vol_tickers))
     return vol_tickers
 
-def filter_tickers_buy_lastPrice(initial_price_tickers, volatility, trader):
-    lg.debug('filter_tickers_lastPrice :' + str(initial_price_tickers))
-    fil_tickers= []
+def filter_tickers_lastPrice(initial_price_tickers, volatility, trader):
+    lg.debug(str(initial_price_tickers))
+    buy_tickers= []
+    sell_tickers = []
     for v_ticker in volatility:
         last_price = trader.get_last_price(v_ticker)
         if last_price > initial_price_tickers.get(v_ticker):
-            fil_tickers.append(v_ticker)
-    lg.debug('filtered ticker last price greater than initial price:' + str(fil_tickers))
-    return fil_tickers
+            buy_tickers.append(v_ticker)
+        elif last_price < initial_price_tickers.get(v_ticker):
+            sell_tickers.append(v_ticker)
+    lg.debug('ticker last price less than initial price:' + str(sell_tickers))
+    lg.debug('ticker last price greater than initial price:' + str(buy_tickers))
+    return buy_tickers,sell_tickers
 
-def filter_tickers_sell_lastPrice(initial_price_tickers, volatility, trader):
-    lg.debug('filter_tickers_lastPrice :' + str(initial_price_tickers))
-    fil_tickers= []
-    for v_ticker in volatility:
-        last_price = trader.get_last_price(v_ticker)
-        if last_price < initial_price_tickers.get(v_ticker):
-            fil_tickers.append(v_ticker)
-    lg.debug('filtered ticker last price less than initial price:' + str(fil_tickers))
-    return fil_tickers
+def add_VIXY(buy_tickers,sell_tickers):
+    buy_tickers = [i for i in buy_tickers if i]
+    sell_tickers = [i for i in sell_tickers if i]
+    tickers = []
+    tickers.extend(buy_tickers)
+    tickers.extend(sell_tickers)
+    lg.debug('Buy/Sell tickers' + str(tickers))
+    if len(tickers) > 0:
+        return buy_tickers, 10
+    else:
+        return ['VIXY'], 40
 
 
-def buy_ticker( trader: shift.Trader, tickers):
+def buy_ticker( trader: shift.Trader, tickers,order_size):
     lg.debug('buy_tickers :'+ str(tickers))
     for ticker in tickers:
-       ticker_buy = shift.Order(shift.Order.Type.MARKET_BUY, ticker, 10)
+       ticker_buy = shift.Order(shift.Order.Type.MARKET_BUY, ticker, order_size)
        trader.submit_order(ticker_buy)
        lg.debug('ticker bought:' + str(ticker))
-    if len(tickers)==0:
-        ticker_buy = shift.Order(shift.Order.Type.MARKET_BUY, 'VIXY', 40)
-        trader.submit_order(ticker_buy)
 
-
-def sell_ticker( trader: shift.Trader, tickers):
+def sell_ticker( trader: shift.Trader, tickers, order_size):
     lg.debug('sell_tickers :' + str(tickers))
     for ticker in tickers:
-       ticker_sell = shift.Order(shift.Order.Type.MARKET_SELL, ticker, 10)
+       ticker_sell = shift.Order(shift.Order.Type.MARKET_SELL, ticker, order_size)
        trader.submit_order(ticker_sell)
-       print('ticker sold:' + str(ticker))
+       lg.debug('ticker sold:' + str(ticker))
 
 def init_tickers():
     # get the ticker's list
@@ -109,7 +111,7 @@ def demo_09(trader: shift.Trader):
     :return:
     """
 
-    print(
+    lg.debug(
         "Symbol\t\t\t\tType\t  Price\t\tSize\tExecuted\tID\t\t\t\t\t\t\t\t\t\t\t\t\t\t Status\t\tTimestamp"
     )
     for order in trader.get_submitted_orders():
@@ -117,7 +119,7 @@ def demo_09(trader: shift.Trader):
             price = order.executed_price
         else:
             price = order.price
-        print(
+        lg.debug(
             "%6s\t%16s\t%7.2f\t\t%4d\t\t%4d\t%36s\t%23s\t\t%26s"
             % (
                 order.symbol,
@@ -134,6 +136,7 @@ def demo_09(trader: shift.Trader):
     return
 
 # connect
+
 
 if __name__=="__main__":
     lg.debug("App Started")
@@ -156,16 +159,15 @@ if __name__=="__main__":
             intial_price = get_initialprice(trader, tickers)
             # get the volatility for 1st 15 mins of trading window
             vol_tickers = get_volatility(trader)
-            thres_tickers = trading_symbols(vol_tickers)
-            thrs_grter_ticker = filter_tickers_buy_lastPrice(intial_price, thres_tickers, trader)
-            buy_ticker(trader, thrs_grter_ticker)
-            thrs_less_ticker = filter_tickers_sell_lastPrice(intial_price, thres_tickers, trader)
-            sell_ticker(trader,thrs_less_ticker)
-            time.sleep(900)
-            sell_ticker(trader,thrs_grter_ticker)
-            buy_ticker(trader,thrs_less_ticker)
+            threshold_tickers = filterticker_on_threshold(vol_tickers)
+            buyticker,sellticker = filter_tickers_lastPrice(intial_price, threshold_tickers, trader)
+            buyticker,order_size = add_VIXY(buyticker,sellticker)
+            buy_ticker(trader, buyticker , order_size)
+            sell_ticker(trader,sellticker,10)
+            time.sleep(120)
+            sell_ticker(trader,buyticker,order_size)
+            buy_ticker(trader,sellticker,10)
             demo_09(trader)
-
 
 
     except shift.IncorrectPasswordError as e:
@@ -176,6 +178,8 @@ if __name__=="__main__":
         sys.exit(2)
     except Exception as err:
         lg.error("Fatal error in main loop", exc_info = True)
+    except:
+        lg.error("Fatal error in main loop", exc_info=True)
     finally:
         trader.disconnect()
         lg.debug('Trader connection disconnected')
