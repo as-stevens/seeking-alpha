@@ -65,6 +65,12 @@ class Volatility_Pipeline:
                 buy_tickers.append(v_ticker)
             elif last_price < initial_price_tickers.get(v_ticker):
                 sell_tickers.append(v_ticker)
+        # if the len of buy_tickers > 3, replace all trades with buy -> SPY and sell -> VIXY
+        if len(buy_tickers) > 3:
+            buy_tickers = []
+            sell_tickers = []
+            buy_tickers.append('SPY')
+            sell_tickers.append('VIXY')
         lg.debug('ticker last price less than initial price:' + str(sell_tickers))
         lg.debug('ticker last price greater than initial price:' + str(buy_tickers))
         return buy_tickers,sell_tickers
@@ -77,13 +83,16 @@ class Volatility_Pipeline:
         tickers.extend(sell_tickers)
         lg.debug('Buy/Sell tickers' + str(tickers))
         if len(tickers) > 0:
-            return buy_tickers, 10
+            if tickers.__contains__('SPY'):
+                return buy_tickers, 13
+            else:
+                return buy_tickers, 10
         else:
-            return ['VIXY'], 40
+            return ['VIXY'], 200
 
 
     def buy_ticker(self, trader: shift.Trader, tickers,order_size):
-        lg.debug('buy_tickers :'+ str(tickers))
+        lg.debug('buy_tickers :' + str(tickers))
         for ticker in tickers:
            ticker_buy = shift.Order(shift.Order.Type.MARKET_BUY, ticker, order_size)
            trader.submit_order(ticker_buy)
@@ -92,9 +101,11 @@ class Volatility_Pipeline:
     def sell_ticker( self, trader: shift.Trader, tickers, order_size):
         lg.debug('sell_tickers :' + str(tickers))
         for ticker in tickers:
-           ticker_sell = shift.Order(shift.Order.Type.MARKET_SELL, ticker, order_size)
-           trader.submit_order(ticker_sell)
-           lg.debug('ticker sold:' + str(ticker))
+            if ticker == 'VIXY':
+                order_size = 100
+            ticker_sell = shift.Order(shift.Order.Type.MARKET_SELL, ticker, order_size)
+            trader.submit_order(ticker_sell)
+            lg.debug('ticker sold:' + str(ticker))
 
     def init_tickers(self,trader):
         # get the ticker's list
@@ -153,8 +164,8 @@ class Volatility_Pipeline:
             buyticker, sellticker = self.filter_tickers_lastPrice(intial_price, threshold_tickers, trader)
             buyticker, order_size = self.add_VIXY(buyticker, sellticker)
             self.buy_ticker(trader, buyticker, order_size)
-            self.sell_ticker(trader, sellticker, 10)
-            time.sleep(900)
+            self.sell_ticker(trader, sellticker, order_size)
+            time.sleep(120)
             self.sell_ticker(trader, buyticker, order_size)
-            self.buy_ticker(trader, sellticker, 10)
+            self.buy_ticker(trader, sellticker, order_size)
             self.demo_09(trader)
