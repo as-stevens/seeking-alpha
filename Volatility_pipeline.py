@@ -84,26 +84,26 @@ class Volatility_Pipeline:
         lg.debug('Buy/Sell tickers' + str(tickers))
         if len(tickers) > 0:
             if tickers.__contains__('SPY'):
-                return buy_tickers, 13
+                return buy_tickers, 13 , 100
             else:
-                return buy_tickers, 10
+                return buy_tickers, 10 , 10
         else:
-            return ['VIXY'], 200
+            return ['VIXY'], 200 , 200
 
 
-    def buy_ticker(self, trader: shift.Trader, tickers,order_size):
+    def buy_ticker(self, trader: shift.Trader, tickers,buy_order_size):
         lg.debug('buy_tickers :' + str(tickers))
         for ticker in tickers:
-           ticker_buy = shift.Order(shift.Order.Type.MARKET_BUY, ticker, order_size)
+           ticker_buy = shift.Order(shift.Order.Type.MARKET_BUY, ticker, buy_order_size)
            trader.submit_order(ticker_buy)
            lg.debug('ticker bought:' + str(ticker))
 
-    def sell_ticker( self, trader: shift.Trader, tickers, order_size):
+    def sell_ticker( self, trader: shift.Trader, tickers, sell_order_size):
         lg.debug('sell_tickers :' + str(tickers))
         for ticker in tickers:
-            if ticker == 'VIXY':
-                order_size = 100
-            ticker_sell = shift.Order(shift.Order.Type.MARKET_SELL, ticker, order_size)
+            # if ticker == 'VIXY':
+            #     order_size = 100
+            ticker_sell = shift.Order(shift.Order.Type.MARKET_SELL, ticker, sell_order_size)
             trader.submit_order(ticker_sell)
             lg.debug('ticker sold:' + str(ticker))
 
@@ -162,10 +162,10 @@ class Volatility_Pipeline:
             vol_tickers = self.get_volatility(trader,tickers)
             threshold_tickers = self.filterticker_on_threshold(vol_tickers)
             buyticker, sellticker = self.filter_tickers_lastPrice(intial_price, threshold_tickers, trader)
-            buyticker, order_size = self.add_VIXY(buyticker, sellticker)
-            self.buy_ticker(trader, buyticker, order_size)
-            self.sell_ticker(trader, sellticker, order_size)
-            time.sleep(120)
-            self.sell_ticker(trader, buyticker, order_size)
-            self.buy_ticker(trader, sellticker, order_size)
+            buyticker, buy_order_size, sell_order_size  = self.add_VIXY(buyticker, sellticker)
+            self.buy_ticker(trader, buyticker, buy_order_size)
+            self.sell_ticker(trader, sellticker, sell_order_size)
+            time.sleep(720)
+            self.sell_ticker(trader, buyticker, buy_order_size)
+            self.buy_ticker(trader, sellticker, sell_order_size)
             self.demo_09(trader)
