@@ -1,7 +1,7 @@
 import math
 import time
 from datetime import datetime
-
+from logger import init
 import pandas as pd
 import shift
 from TraderS import TraderS
@@ -22,6 +22,38 @@ class MACD_pipeline:
         self.df_current.TIME = now = datetime.now().time()
 
         lg.debug(self.df_current)
+
+    def demo_09(self, trader: shift.Trader):
+        """
+        This method prints all submitted orders information.
+        :param trader:
+        :return:
+        """
+
+        lg.debug(
+            "Symbol\t\t\t\tType\t  Price\t\tSize\tExecuted\tID\t\t\t\t\t\t\t\t\t\t\t\t\t\t Status\t\tTimestamp"
+        )
+        for order in trader.get_submitted_orders():
+            if order.status == shift.Order.Status.FILLED:
+                price = order.executed_price
+            else:
+                price = order.price
+            lg.debug(
+                "%6s\t%16s\t%7.2f\t\t%4d\t\t%4d\t%36s\t%23s\t\t%26s"
+                % (
+                    order.symbol,
+                    order.type,
+                    price,
+                    order.size,
+                    order.executed_size,
+                    order.id,
+                    order.status,
+                    order.timestamp,
+                )
+            )
+
+        return
+
 
     def get_current_price(self):
         current_prices = {}
@@ -73,13 +105,13 @@ class MACD_pipeline:
         if math.isnan(previous_trade_signal):
             self.current_data['TRADE_SIGNAL'] = current_trade_signal
             return
-        if current_trade_signal > previous_trade_signal:
+        if current_trade_signal < previous_trade_signal:
             # Buy the stocks
             ticker_buy = shift.Order(shift.Order.Type.MARKET_BUY, ticker, 20)
             TraderS.getInstance().submit_order(ticker_buy)
             self.current_data['TRADE_DECISION'] = 1
             lg.debug('Buy the stock {0}'.format(ticker))
-        elif current_trade_signal < previous_trade_signal:
+        elif current_trade_signal > previous_trade_signal:
             # Sell the stocks
             ticker_sell = shift.Order(shift.Order.Type.MARKET_SELL, ticker, 20)
             TraderS.getInstance().submit_order(ticker_sell)
@@ -87,15 +119,22 @@ class MACD_pipeline:
             lg.debug('Sell the stock {0}'.format(ticker))
         else:
             lg.debug('No Buy Sell')
-        lg.debug(self.df_current)
-
+        #lg.debug(self.df_current)
 
     def schedule_macd(self):
         pd.set_option('display.expand_frame_repr', False)
-        while(True):
+        self.trade()
+        time.sleep(12600)
+        self.trade()
+
+    def trade(self):
+        start_time = time.time()
+        elapsed_time = time.time() - start_time
+        while (elapsed_time < 5400):
             self.get_current_price()
-            time.sleep(1)
-            self.df_current.drop(self.df_current[self.df_current['Age'] < 25].index, inplace=True)
+            time.sleep(30)
+            self.demo_09(TraderS.getInstance())
+            elapsed_time = time.time() - start_time
 
     def trader_disconnect(self):
         TraderS.disconnect()
@@ -114,7 +153,7 @@ class MACD_pipeline:
             return
         pre_fast_ema = last_record.get('EMA_FAST')
         first_ema, current_fast_ema = self.ema(fast, current_price, pre_fast_ema)
-        self.current_data['EMA_FAST'] = current_slow_ema
+        self.current_data['EMA_FAST'] = current_fast_ema
         if first_ema:
             return
 
@@ -127,8 +166,9 @@ class MACD_pipeline:
 
 
 # Run the macd code
-#mscd = MACD_pipeline(['SPY', 'VIXY', 'DIA', 'AAPL'])
-#TraderS.getInstance().sub_all_order_book()
-#time.sleep(5)
-#mscd.schedule_macd()
+# init()
+# mscd = MACD_pipeline(['SPY', 'VIXY', 'DIA', 'AAPL'])
+# TraderS.getInstance().sub_all_order_book()
+# time.sleep(5)
+# mscd.schedule_macd()
 

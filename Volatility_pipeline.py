@@ -153,7 +153,10 @@ class Volatility_Pipeline:
     # connect
     def schedule(self):
         lg.debug('Volatility Algo started')
-        while (True):
+        time.sleep(5400)
+        start_time = time.time()
+        elapsed_time = time.time() - start_time
+        while (elapsed_time < 12600):
             # get the initial price for all tickers
             trader = TraderS.getInstance()
             tickers = self.init_tickers(trader)
@@ -169,3 +172,4 @@ class Volatility_Pipeline:
             self.sell_ticker(trader, buyticker, buy_order_size)
             self.buy_ticker(trader, sellticker, sell_order_size)
             self.demo_09(trader)
+            elapsed_time = time.time() - start_time
