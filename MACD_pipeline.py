@@ -54,6 +54,53 @@ class MACD_pipeline:
 
         return
 
+    def demo_07(self, trader: shift.Trader):
+        """
+        This method provides information on the structure of PortfolioSummary and PortfolioItem objects:
+         get_portfolio_summary() returns a PortfolioSummary object with the following data:
+         1. Total Buying Power (get_total_bp())
+         2. Total Shares (get_total_shares())
+         3. Total Realized Profit/Loss (get_total_realized_pl())
+         4. Timestamp of Last Update (get_timestamp())
+
+         get_portfolio_items() returns a dictionary with "symbol" as keys and PortfolioItem as values,
+         with each providing the following information:
+         1. Symbol (get_symbol())
+         2. Shares (get_shares())
+         3. Price (get_price())
+         4. Realized Profit/Loss (get_realized_pl())
+         5. Timestamp of Last Update (get_timestamp())
+        :param trader:
+        :return:
+        """
+
+        print("Buying Power\tTotal Shares\tTotal P&L\tTimestamp")
+        print(
+            "%12.2f\t%12d\t%9.2f\t%26s"
+            % (
+                trader.get_portfolio_summary().get_total_bp(),
+                trader.get_portfolio_summary().get_total_shares(),
+                trader.get_portfolio_summary().get_total_realized_pl(),
+                trader.get_portfolio_summary().get_timestamp(),
+            )
+        )
+
+        print()
+
+        print("Symbol\t\tShares\t\tPrice\t\t  P&L\tTimestamp")
+        for item in trader.get_portfolio_items().values():
+            print(
+                "%6s\t\t%6d\t%9.2f\t%9.2f\t%26s"
+                % (
+                    item.get_symbol(),
+                    item.get_shares(),
+                    item.get_price(),
+                    item.get_realized_pl(),
+                    item.get_timestamp(),
+                )
+            )
+
+        return
 
     def get_current_price(self):
         current_prices = {}
@@ -69,7 +116,7 @@ class MACD_pipeline:
         return current_prices
 
     def ema(self,period, current_price, ema_val):
-        beta = 1/(period + 1)
+        beta = 2/(period + 1)
         first_ema = False
 
         #update MACD values
@@ -99,22 +146,26 @@ class MACD_pipeline:
         self.trade_decision(trade_signal,last_record)
 
     def trade_decision(self,current_trade_signal,last_record):
+        trader = TraderS.getInstance()
         ticker = last_record.get('TICKER')
         beta = 1/(signal_period + 1)
         previous_trade_signal = last_record.get('TRADE_SIGNAL')
         if math.isnan(previous_trade_signal):
             self.current_data['TRADE_SIGNAL'] = current_trade_signal
             return
-        if current_trade_signal < previous_trade_signal:
+        if current_trade_signal > previous_trade_signal:
             # Buy the stocks
-            ticker_buy = shift.Order(shift.Order.Type.MARKET_BUY, ticker, 20)
+            ticker_buy = shift.Order(shift.Order.Type.MARKET_BUY, ticker, 47)
             TraderS.getInstance().submit_order(ticker_buy)
             self.current_data['TRADE_DECISION'] = 1
             lg.debug('Buy the stock {0}'.format(ticker))
-        elif current_trade_signal > previous_trade_signal:
-            # Sell the stocks
-            ticker_sell = shift.Order(shift.Order.Type.MARKET_SELL, ticker, 20)
-            TraderS.getInstance().submit_order(ticker_sell)
+        elif current_trade_signal < previous_trade_signal:
+            for item in trader.get_portfolio_items().values():
+                symbol, shares = item.get_symbol(), item.get_shares()
+                if shares > 0 and symbol == ticker:
+                # Sell the stocks
+                    ticker_sell = shift.Order(shift.Order.Type.MARKET_SELL, ticker, 47)
+                    TraderS.getInstance().submit_order(ticker_sell)
             self.current_data['TRADE_DECISION'] = -1
             lg.debug('Sell the stock {0}'.format(ticker))
         else:
@@ -124,17 +175,31 @@ class MACD_pipeline:
     def schedule_macd(self):
         pd.set_option('display.expand_frame_repr', False)
         self.trade()
-        time.sleep(12600)
-        self.trade()
+        trader = TraderS.getInstance()
+        for item in trader.get_portfolio_items().values():
+            symbol, shares = item.get_symbol(), item.get_shares()
+            lg.debug(symbol)
+            lg.debug(shares)
+            if shares > 0:
+                ticker_sell = shift.Order(shift.Order.Type.MARKET_SELL, symbol, shares//100)
+                trader.submit_order(ticker_sell)
+            else:
+                ticker_buy = shift.Order(shift.Order.Type.MARKET_BUY, symbol, shares//100)
+                trader.submit_order(ticker_buy)
+        time.sleep(60)
+        self.demo_07(trader)
+        # time.sleep(12600)
+        # self.trade()
 
     def trade(self):
         start_time = time.time()
         elapsed_time = time.time() - start_time
-        while (elapsed_time < 5400):
+        while (elapsed_time < 22500):
             self.get_current_price()
-            time.sleep(30)
-            self.demo_09(TraderS.getInstance())
+            time.sleep(5)
             elapsed_time = time.time() - start_time
+            self.demo_07(TraderS.getInstance())
+
 
     def trader_disconnect(self):
         TraderS.disconnect()

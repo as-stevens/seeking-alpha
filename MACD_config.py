@@ -1,3 +1,3 @@
-fast = 3
-slow = 10
-signal_period = 9
+fast = 36
+slow = 120
+signal_period = 30
