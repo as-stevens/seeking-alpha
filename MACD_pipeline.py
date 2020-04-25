@@ -149,7 +149,7 @@ class MACD_pipeline:
         trader = TraderS.getInstance()
         ticker = last_record.get('TICKER')
         beta = 1/(signal_period + 1)
-        upper_pivot_level = 0.20
+        upper_pivot_level = 0.50
         previous_trade_signal = last_record.get('TRADE_SIGNAL')
         if math.isnan(previous_trade_signal):
             self.current_data['TRADE_SIGNAL'] = current_trade_signal
