@@ -149,6 +149,7 @@ class MACD_pipeline:
         trader = TraderS.getInstance()
         ticker = last_record.get('TICKER')
         beta = 1/(signal_period + 1)
+        upper_pivot_level = 0.20
         previous_trade_signal = last_record.get('TRADE_SIGNAL')
         if math.isnan(previous_trade_signal):
             self.current_data['TRADE_SIGNAL'] = current_trade_signal
@@ -169,6 +170,17 @@ class MACD_pipeline:
             self.current_data['TRADE_DECISION'] = -1
             lg.debug('Sell the stock {0}'.format(ticker))
         else:
+            for item in trader.get_portfolio_items().values():
+                symbol, shares, price = item.get_symbol(), item.get_shares(), item.get_price()
+                ticker2 = self.current_data['TICKER']
+                lg.debug('Portfolio ticker {}, Symbol {}'.format(ticker2,symbol))
+                if symbol == ticker2 and shares > 0:
+                    current_price = self.current_data['CURRENT_PRICE']
+                    if (current_price-price) > upper_pivot_level:
+                        ticker_sell = shift.Order(shift.Order.Type.MARKET_SELL, symbol, 47)
+                        TraderS.getInstance().submit_order(ticker_sell)
+                        lg.debug('Pivot Activated')
+
             lg.debug('No Buy Sell')
         #lg.debug(self.df_current)
 
@@ -181,10 +193,10 @@ class MACD_pipeline:
             lg.debug(symbol)
             lg.debug(shares)
             if shares > 0:
-                ticker_sell = shift.Order(shift.Order.Type.MARKET_SELL, symbol, shares//100)
+                ticker_sell = shift.Order(shift.Order.Type.MARKET_SELL, symbol, 47)
                 trader.submit_order(ticker_sell)
             else:
-                ticker_buy = shift.Order(shift.Order.Type.MARKET_BUY, symbol, shares//100)
+                ticker_buy = shift.Order(shift.Order.Type.MARKET_BUY, symbol, 47)
                 trader.submit_order(ticker_buy)
         time.sleep(60)
         self.demo_07(trader)
