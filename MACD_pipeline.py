@@ -149,18 +149,18 @@ class MACD_pipeline:
         trader = TraderS.getInstance()
         ticker = last_record.get('TICKER')
         beta = 1/(signal_period + 1)
-        upper_pivot_level = 0.50
+        upper_pivot_level = 0.39
         previous_trade_signal = last_record.get('TRADE_SIGNAL')
         if math.isnan(previous_trade_signal):
             self.current_data['TRADE_SIGNAL'] = current_trade_signal
             return
-        if current_trade_signal > previous_trade_signal:
+        if current_trade_signal < previous_trade_signal:
             # Buy the stocks
             ticker_buy = shift.Order(shift.Order.Type.MARKET_BUY, ticker, 47)
             TraderS.getInstance().submit_order(ticker_buy)
             self.current_data['TRADE_DECISION'] = 1
             lg.debug('Buy the stock {0}'.format(ticker))
-        elif current_trade_signal < previous_trade_signal:
+        elif current_trade_signal > previous_trade_signal:
             for item in trader.get_portfolio_items().values():
                 symbol, shares = item.get_symbol(), item.get_shares()
                 if shares > 0 and symbol == ticker:
@@ -208,7 +208,7 @@ class MACD_pipeline:
         elapsed_time = time.time() - start_time
         while (elapsed_time < 22500):
             self.get_current_price()
-            time.sleep(5)
+            time.sleep(30)
             elapsed_time = time.time() - start_time
             self.demo_07(TraderS.getInstance())
 

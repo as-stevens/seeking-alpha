@@ -66,13 +66,13 @@ class Volatility_Pipeline:
             elif last_price < initial_price_tickers.get(v_ticker):
                 sell_tickers.append(v_ticker)
         # if the len of buy_tickers > 3, replace all trades with buy -> SPY and sell -> VIXY
-        if len(buy_tickers) > 3:
-            buy_tickers = []
-            sell_tickers = []
-            buy_tickers.append('SPY')
-            sell_tickers.append('VIXY')
-        lg.debug('ticker last price less than initial price:' + str(sell_tickers))
-        lg.debug('ticker last price greater than initial price:' + str(buy_tickers))
+        # if len(buy_tickers) > 3:
+        #     buy_tickers = []
+        #     sell_tickers = []
+        #     buy_tickers.append('SPY')
+        #     sell_tickers.append('VIXY')
+        # lg.debug('ticker last price less than initial price:' + str(sell_tickers))
+        # lg.debug('ticker last price greater than initial price:' + str(buy_tickers))
         return buy_tickers,sell_tickers
 
     def add_VIXY(self, buy_tickers,sell_tickers):
@@ -110,9 +110,9 @@ class Volatility_Pipeline:
     def init_tickers(self,trader):
         # get the ticker's list
         tickers = trader.get_stock_list()
-        tickers.remove('DIA')
-        tickers.remove('SPY')
-        tickers.remove('VIXY')
+        # tickers.remove('DIA')
+        # tickers.remove('SPY')
+        # tickers.remove('VIXY')
         lg.debug(tickers)
         return tickers
 
